@@ -8,21 +8,11 @@
 # import log prefix
 source prefix.sh
 
-# ---- Logging Configuration ----
+# ---- Logging Configuration from settings.conf ----
 
-SLEEP_TIME=2            # in seconds
-DYN_LOGGING_SPEED=true  # dynamically increase and decrease the sleep time to account for system load
-PRINT_DEBUG=false       # if debug should be printed
-RPI_NAME="RPI_1"        # name of this Pi
+source settings.conf
 
-# -------------------------------
-#   Configuration for influx database
-# -------------------------------
-
-BUCKET_NAME="rpi_logging"
-MEASUREMENT_NAME="$RPI_NAME"
-
-# -------------------------------
+# --------------------------------------------------
 
 
 # define functions for obtaining system stats
@@ -48,13 +38,9 @@ get_DU () {
     # Disk usage
     # Run the df command and skip the first line
     df_output=$(df | sed -n '2,$p')
-    # local -n arr=$1             # use nameref for indirection
 
     # Loop over each line in the df output
-    # echo "$df_output" | while IFS= read -r line; do
     while IFS= read -r line; do
-        # echo $line
-        # echo "---------------"
         # gather data
         partname=$(echo $line| awk '{print $1}')
 
@@ -97,7 +83,7 @@ log_influx () {
     get_DU
 
     #send to influx
-    influx write --bucket $BUCKET_NAME --org home "$DATA_STRING"
+    influx write --bucket $BUCKET_NAME "$DATA_STRING"
 }
 
 
