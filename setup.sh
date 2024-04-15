@@ -5,6 +5,7 @@
 
 SOURCE_DIR="src/*"
 INSTALL_DIR="/usr/local/bin"
+CONFIG_FILE="src/settings.conf"
 
 # -------------------------------
 
@@ -37,12 +38,15 @@ then
     echo -e "$SUCCESS Influx is setup correctly"
 else
     echo -e "$DEBUG Creating bucket for logging."
-    influx bucket create -n $BUCKET_NAME
+    if ! influx bucket create -n $BUCKET_NAME
+    then
+        echo -e "$ERROR Could not create logging bucket. Probably, you did not provide an all-access token (which is a good idea). However, that means that you need to perform one manual step. Please create a bucket called $BUCKET_NAME yourself (and make sure the influx conf can access this bucket), or change the bucket name to an existing bucket in the configuration file located in '$CONFIG_FILE'"
+        exit 1
+    fi
 fi
 
 
 TARGET_KEY="RPI_NAME"
-CONFIG_FILE="src/settings.conf"
 # Get command line arguments (if provided)
 if ! [ $# -eq 0 ]
 then
@@ -93,7 +97,7 @@ if sudo systemctl enable rpi_logging.service; then
 fi
 
 # Finally start service
-if sudo systemctl start rpi_logging; then
+if sudo systemctl restart rpi_logging; then
     echo -e "$SUCCESS Started logging."
 fi
 
