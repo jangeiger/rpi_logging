@@ -14,12 +14,49 @@ source src/prefix.sh
 echo -e "$DEBUG Setting up logging..."
 
 
+
+# Ensure that the influx configuration is set up correctly
+INFLUX_CONFIG_NAME=$(influx config | sed -n '2p' | awk '{print $2}')
+if [ "$INFLUX_CONFIG_NAME" != "logging_conf" ]
+then
+    # Try to enable the logging configuration
+    influx config logging_conf
+    if [ $? -eq 0 ]
+    then
+        echo -e "$DEBUG Set influx logging configuration as active configuration."
+    else
+        echo -e "$ERROR The influx configuration is not setup correctly. You can check the active config by running 'sudo influx config list'. The logging configuration needs to be named 'logging_conf'. If it is not present, please create it with 'sudo influx config create --config-name logging_conf --org <your_org> --token <your_token> --host-url http://localhost:8086 --active'. Please note that you also need to run this script with sudo permissions, otherwise the influx config cannot be accessed."
+        exit 1
+    fi
+fi
+
+# check if bucket exists
+source src/settings.conf
+if influx bucket list | grep -q "$BUCKET_NAME"
+then
+    echo -e "$SUCCESS Influx is setup correctly"
+else
+    echo -e "$DEBUG Creating bucket for logging."
+    influx bucket create -n $BUCKET_NAME
+fi
+
+
+TARGET_KEY="RPI_NAME"
+CONFIG_FILE="src/settings.conf"
+# Get command line arguments (if provided)
+if ! [ $# -eq 0 ]
+then
+    REPLACEMENT_VALUE=$1
+    sed -i "s/\($TARGET_KEY *= *\).*/\1\"$REPLACEMENT_VALUE\"/" $CONFIG_FILE
+fi
+
+
 echo -e "$DEBUG Copying files..."
 # copy logging files to install directory
 if cp -r $SOURCE_DIR $INSTALL_DIR; then
     echo -e "$SUCCESS Copied all files."
 else
-    echo -e "$ERROR Could not copy files. Please check if you have superuser priviliges."
+    echo -e "$ERROR Could not copy files. Please check if you have superuser privileges."
     exit 1
 fi
 

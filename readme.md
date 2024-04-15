@@ -22,7 +22,7 @@ To run it, first just clone this repository
 Now you need to add a configuration for influx, such that this code can write data to the database.
 Therefore, add a configuration via
 
-    influx config create --config-name logging_conf --org <your_org> --token <your_token> --host-url http://localhost:8086 --active
+    sudo influx config create --config-name logging_conf --org <your_org> --token <your_token> --host-url http://localhost:8086 --active
 
 You need to insert the information for your org and an API token.
 This code expects a bucked called `rpi_logging` to exist.
@@ -32,6 +32,8 @@ You can also adjust the device name there (`RPI_NAME`).
 Lastly, once you have setup the influx configuration and adjusted the variables to your liking, install the logger by running the installer with
 
     sudo bash setup.sh
+
+Optionally, you can provide a custom name to this device as the first command line argument.
 
 
 ## Checking the installation
