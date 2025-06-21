@@ -27,7 +27,7 @@ get_CPU () {
     # CPU Usage
     # CPU information: cpu <user> <nice> <system> <idle> <iowait> <irq> <softirq>
     #                   $1   $2    $3      $4       $5     $6      $7      $8
-    CPU_usage=$(grep 'cpu ' /proc/stat | awk '{print 100*($2+$4)/($2+$4+$5)}')
+    CPU_usage=$(awk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else print ($2+$4-u1) * 1000 / (t-t1); }' <(grep 'cpu ' /proc/stat) <(sleep 0.1; grep 'cpu ' /proc/stat))
 }
 
 get_CPU_temp () {
@@ -73,7 +73,9 @@ log_influx () {
     # add CPU usage
     DATA_STRING="$MEASUREMENT_NAME,device=$RPI_NAME,unit=percent cpu_usage=$CPU_usage"
     # add CPU temperature
-    DATA_STRING=$DATA_STRING$'\n'"$MEASUREMENT_NAME,device=$RPI_NAME,unit=celsius cpu_temp=$CPU_temp"
+    if [[ "$CPU_temp" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+        DATA_STRING=$DATA_STRING$'\n'"$MEASUREMENT_NAME,device=$RPI_NAME,unit=celsius cpu_temp=$CPU_temp"
+    fi    
     # add RAM usage
     DATA_STRING=$DATA_STRING$'\n'"$MEASUREMENT_NAME,device=$RPI_NAME,unit=kB RAM_total=$RAM_totl"
     DATA_STRING=$DATA_STRING$'\n'"$MEASUREMENT_NAME,device=$RPI_NAME,unit=kB RAM_used=$RAM_used"
