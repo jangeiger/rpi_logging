@@ -71,7 +71,7 @@ get_CPU () {
     # CPU Usage
     # CPU information: cpu <user> <nice> <system> <idle> <iowait> <irq> <softirq>
     #                   $1   $2    $3      $4       $5     $6      $7      $8
-    CPU_usage=$(awk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else print ($2+$4-u1) * 1000 / (t-t1); }' <(grep 'cpu ' /proc/stat) <(sleep 0.1; grep 'cpu ' /proc/stat))
+    CPU_usage=$(awk '{u=$2+$4; t=$2+$4+$5; if (NR==1){u1=u; t1=t;} else print ($2+$4-u1) * 100 / (t-t1); }' <(grep 'cpu ' /proc/stat) <(sleep 0.1; grep 'cpu ' /proc/stat))
 }
 
 get_CPU_temp () {
