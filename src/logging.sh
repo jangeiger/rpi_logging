@@ -16,8 +16,52 @@ source settings.conf
 
 
 # define functions for obtaining system stats
+get_network_usage() {
+  local interface=$1
+  local usage_file="/tmp/network_usage_$interface"
+  local rx_prev tx_prev rx_curr tx_curr rx_rate tx_rate rx_rate_kbits tx_rate_kbits
+
+  rx_prev=$(cat /sys/class/net/$interface/statistics/rx_bytes)
+  tx_prev=$(cat /sys/class/net/$interface/statistics/tx_bytes)
+
+  while true; do
+    sleep 1
+    rx_curr=$(cat /sys/class/net/$interface/statistics/rx_bytes)
+    tx_curr=$(cat /sys/class/net/$interface/statistics/tx_bytes)
+    rx_rate=$((rx_curr - rx_prev))
+    tx_rate=$((tx_curr - tx_prev))
+    echo "RX_KBPS=$((rx_rate * 8 / 1000))" > "$usage_file"
+    echo "TX_KBPS=$((tx_rate * 8 / 1000))" >> "$usage_file"
+    rx_prev=$rx_curr
+    tx_prev=$tx_curr
+  done &
+}
+
+# Loop through all network interfaces
+for interface in $(ls /sys/class/net/); do
+  if [[ "$interface" != "lo" ]]; then
+    get_network_usage $interface
+  fi
+done
+
+
+get_Network () {
+    # Loop through all network interfaces
+    for interface in $(ls /sys/class/net/); do
+        if [[ "$interface" != "lo" ]]; then
+            usage_file="/tmp/network_usage_$interface"
+            if [[ -f "$usage_file" ]]; then
+                rx_kbps=$(grep -oP '^RX_KBPS=\K[0-9]+' "$usage_file")
+                tx_kbps=$(grep -oP '^TX_KBPS=\K[0-9]+' "$usage_file")
+                DATA_STRING=$DATA_STRING$'\n'"$MEASUREMENT_NAME,device=$RPI_NAME,unit=kB/s,interface=$interface tx=${rx_kbps}"
+                DATA_STRING=$DATA_STRING$'\n'"$MEASUREMENT_NAME,device=$RPI_NAME,unit=kB/s,interface=$interface rx=${tx_kbps}"
+            fi
+        fi
+    done
+}
+
 get_RAM () {
-   # RAM USAGE
+    # RAM USAGE
     RAM_totl=$(free | sed -n '2{p;q}' | awk '{print $2}')
     RAM_used=$(free | sed -n '2{p;q}' | awk '{print $3}')
     RAM_free=$(free | sed -n '2{p;q}' | awk '{print $4}')
@@ -84,6 +128,9 @@ log_influx () {
     # add data from DU
     get_DU
 
+    # add Network usage
+    get_Network
+
     #send to influx
     influx write --bucket $BUCKET_NAME "$DATA_STRING"
 }
@@ -95,7 +142,8 @@ do
     # https://unix.stackexchange.com/questions/52313/how-to-get-execution-time-of-a-script-effectively
     # print output purely as seconds
     TIMEFORMAT=%R
-    execution_time=$( { time log_influx; } 2>&1 )
+    # execution_time=$( { time log_influx; } 2>&1 )
+    execution_time=$( { time log_influx > /dev/null 2>&1; } 2>&1 )
 
     if $PRINT_DEBUG
     then
