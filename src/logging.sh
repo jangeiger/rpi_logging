@@ -53,8 +53,8 @@ get_Network () {
             if [[ -f "$usage_file" ]]; then
                 rx_kbps=$(grep -oP '^RX_KBPS=\K[0-9]+' "$usage_file")
                 tx_kbps=$(grep -oP '^TX_KBPS=\K[0-9]+' "$usage_file")
-                DATA_STRING=$DATA_STRING$'\n'"$MEASUREMENT_NAME,device=$RPI_NAME,unit=kB/s,interface=$interface tx=${rx_kbps}"
-                DATA_STRING=$DATA_STRING$'\n'"$MEASUREMENT_NAME,device=$RPI_NAME,unit=kB/s,interface=$interface rx=${tx_kbps}"
+                DATA_STRING=$DATA_STRING$'\n'"$MEASUREMENT_NAME,device=$RPI_NAME,unit=kbit/s,interface=$interface rx=${rx_kbps}"
+                DATA_STRING=$DATA_STRING$'\n'"$MEASUREMENT_NAME,device=$RPI_NAME,unit=kbit/s,interface=$interface tx=${tx_kbps}"
             fi
         fi
     done
