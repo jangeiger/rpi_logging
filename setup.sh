@@ -40,8 +40,7 @@ else
     echo -e "$DEBUG Creating bucket for logging."
     if ! influx bucket create -n $BUCKET_NAME
     then
-        echo -e "$ERROR Could not create logging bucket. Probably, you did not provide an all-access token (which is a good idea). However, that means that you need to perform one manual step. Please create a bucket called $BUCKET_NAME yourself (and make sure the influx conf can access this bucket), or change the bucket name to an existing bucket in the configuration file located in '$CONFIG_FILE'"
-        exit 1
+        echo -e "$WARNING Could not create logging bucket. Probably, you did not provide an all-access token (which is a good idea). However, that means that you need to perform one manual step. Please create a bucket called $BUCKET_NAME yourself (and make sure the influx conf can access this bucket), or change the bucket name to an existing bucket in the configuration file located in '$CONFIG_FILE'. Make sure to run the installer again, if you change the config file."
     fi
 fi
 
