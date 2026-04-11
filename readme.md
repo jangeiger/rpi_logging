@@ -20,7 +20,11 @@ To run it, first just clone this repository
     git clone https://github.com/jangeiger/rpi_logging.git
 
 Now you need to add a configuration for influx, such that this code can write data to the database.
-Therefore, add a configuration via
+If you do not have the influx CLI already installed, please run
+
+    sudo install_influx_cli
+
+If you have the influx CLI, add a configuration via
 
     sudo influx config create --config-name logging_conf --org <your_org> --token <your_token> --host-url http://localhost:8086 --active
 
